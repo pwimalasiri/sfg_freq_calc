@@ -22,7 +22,7 @@ program SiO2_cluster
   real(kind=dp)                 :: dt,R_inner,R_outer,rmin,delr
   real(kind=dp)                 :: box,boy,boz,comx,comy,comz,dz
   real(kind=dp)                 :: massO,massH,qO_water,qH_water,qO_frozen
-  real(kind=dp)                 :: qSi_frozen,mtot,rSPCE,pi,norm,Eproj_O,Eproj_H
+  real(kind=dp)                 :: qSi_frozen,mtot,rSPCE,pi,norm,norm_H1,norm_H2,Eproj_O,Eproj_H
   real(kind=dp)                 :: dist_O,dist_1,dist_2,dist_HO,dist_H1,dist_H2,dist_HSi
   real(kind=dp)                 :: dist_H_O,rOH,dmin,dmin_surf,qO_sil,qH_sil,charge,charge_cnt
   real(kind=dp),parameter       :: angperau=0.52917721092
@@ -37,6 +37,7 @@ program SiO2_cluster
   real(kind=dp),allocatable,dimension(:,:)      :: rO,rH1,rH2,rOs,rH1s,rH2s 
   real(kind=dp),allocatable,dimension(:,:)      :: cluster,cluster_s
   real(kind=dp),dimension(3)                    :: L,eOH,rCM,clus_H,clus_O,clus_Si
+  real(kind=dp),dimension(3)                    :: eOH_H1,eOH_H2,rCM_H1,rCM_H2
   real(kind=dp),dimension(3)                    :: clus_froz_O,shift1,E_O,E_H,rtmpO,rtmpH
   real(kind=dp),dimension(3)                    :: shift2,shift3
   real(kind=dp),allocatable,dimension(:)        :: drank,drank_surf,drank_hyd
@@ -589,6 +590,25 @@ program SiO2_cluster
 !       write(6,*) ' imin = ',imin
 !       write(6,*) ' imin_surf = ',imin_surf
         irank(1) = imin
+
+        norm_H1 = 0_dp
+        do k=1,3
+           eOH_H1(k) = rH1s(imin,k) - rOs(imin,k)
+           norm_H1 = norm_H1 + eOH_H1(k)*eOH_H1(k)
+           rCM_H1(k) = (massO*rOs(imin,k) + massH*rH1s(imin,k))/mtot
+        enddo
+
+        norm_H1 = dsqrt(norm_H1)
+
+        norm_H2 = 0_dp
+        do k=1,3
+           eOH_H2(k) = rH1s(imin,k) - rOs(imin,k)
+           norm_H2 = norm_H2 + eOH_H2(k)*eOH_H2(k)
+           rCM_H2(k) = (massO*rOs(imin,k) + massH*rH1s(imin,k))/mtot
+        enddo
+
+        norm_H2 = dsqrt(norm_H2)
+        
         inner(imin) = .true.
         outer(imin) = .false.
         in_cnt=1_ip
