@@ -28,6 +28,9 @@ program SiO2_cluster
   real(kind=dp),parameter       :: angperau=0.52917721092
   character*100                 :: tmp_path,main_path,data_path,scr_path
 
+  real(kind=dp)                 :: hbnd_OO,hbnd_HO
+
+  
 ! arrays
   real(kind=dp),allocatable,dimension(:,:)      :: frozen_o,si,hydroxyl_o,hydroxyl_h
   real(kind=dp),allocatable,dimension(:)        :: xxx_cluster,yyy_cluster,zzz_cluster
@@ -608,6 +611,14 @@ program SiO2_cluster
         enddo
 
         norm_H2 = dsqrt(norm_H2)
+
+! h-bond criteria (check if the water molecule which is very close to silanol is h-bonding)
+
+        hbnd_OO = 0_dp
+        hbnd_HO = 0_dp
+        do k=1,3
+           hbnd_OO = hbnd_OO + (r
+        
         
         inner(imin) = .true.
         outer(imin) = .false.
