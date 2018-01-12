@@ -28,8 +28,8 @@ program SiO2_cluster
   real(kind=dp),parameter       :: angperau=0.52917721092
   character*100                 :: tmp_path,main_path,data_path,scr_path
 
-  real(kind=dp)                 :: hbnd_OO,hbnd_HO
-
+  real(kind=dp)                 :: hbnd_OO,hbnd_H1O,hbnd_H2O
+  integer(kind=ip)              :: choose
   
 ! arrays
   real(kind=dp),allocatable,dimension(:,:)      :: frozen_o,si,hydroxyl_o,hydroxyl_h
@@ -615,10 +615,61 @@ program SiO2_cluster
 ! h-bond criteria (check if the water molecule which is very close to silanol is h-bonding)
 
         hbnd_OO = 0_dp
-        hbnd_HO = 0_dp
+        hbnd_H1O = 0_dp
+        hbnd_H2O = 0_dp        
         do k=1,3
-           hbnd_OO = hbnd_OO + (r
+           hbnd_OO  = hbnd_OO  + (rOs(imin,k)-cluster_s(2,k))**2
+        enddo
+
+        hbnd_OO = sqrt(hbnd_OO)
         
+        if (hbnd_OO.le.3.5) then
+           do k=1,3
+              hbnd_H1O  = hbnd_H1O  + (rH1s(imin,k)-cluster_s(2,k))**2
+              hbnd_H2O  = hbnd_H2O  + (rH2s(imin,k)-cluster_s(2,k))**2              
+           enddo
+
+           hbnd_H1O = sqrt(hbnd_H1O)
+           hbnd_H2O = sqrt(hbnd_H2O)
+
+           if (hbnd_H1O.le.2.5) then
+              choose = 1
+           else if (hbnd_H2O.le.2.5) then
+              choose = 2
+           endif
+
+        else
+           write(6,'(A)') 'The closest water molecule does not h-bond to silanol'
+           stop
+        endif
+
+! calculate SiO-OH vector and SiO-HO vectors 
+
+        e_OO = 0_dp
+        e_HO = 0_dp
+        dot  = 0_dp
+        
+        do k=1,3
+           e_OO = e_OO + cluster_s(2,k) - rOs(imin,k)
+
+! finally, calculate the angle between SiO-OH and SiO_HO to confirm h-bonding
+           if (choose.eq.1) then
+              e_OH = e_HO + cluster_s(2,k) - rH1s(imin,k)
+              dot = dot + (cluster_s(2,k)*rH1(imin,k))
+           else if (choose.eq.2) then
+              e_OH = e_HO + cluster_s(2,k) - rH2s(imin,k)
+              dot = dot + (cluster_s(2,k)*rH1(imin,k))              
+           endif
+        enddo 
+
+        if (choose.eq.1) then
+           cos_theta = dot/(hbnd_OO*hbnd_H1O)
+        else if (choose.eq.2) then
+           cos_theta = dot/(hbnd_OO*hbnd_H2O)
+        endif
+
+        write(6,'(A,F12.5)') 'cos_theta =',cos_theta
+        stop
         
         inner(imin) = .true.
         outer(imin) = .false.
